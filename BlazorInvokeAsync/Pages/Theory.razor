@@ -1,0 +1,49 @@
+﻿@page "/theory"
+@using BlazorInvokeAsync.Models;
+
+<PageTitle></PageTitle>
+
+<h1>State Conflict</h1>
+
+<p>This demo demostrate how there's a conflict when multiple threads are updating the state</p>
+<p>This counter value should be always 5000</p>
+<p>The use of <b>invokeAsync</b> solves the conflict</p>
+<div>
+  <input type="checkbox" @bind=UseInvokeAsync id="UseInvokeAsyncCheckbox" />
+  <label for="UseInvokeAsyncCheckbox">Use InvokeAsync</label>
+</div>
+
+<ShowCounterValue/>
+
+<div>
+  <button @onclick=Start disabled=@IsWorking>Start</button>
+</div>
+
+@if (IsWorking)
+{
+    for (int i = 0; i < 5; i++)
+    {
+        <IncrementCounter Trigger=@Trigger ShouldUseInvokeAsync=@UseInvokeAsync />
+    }
+}
+
+@code {
+    private bool IsWorking;
+    private bool UseInvokeAsync;
+    private System.Threading.ManualResetEvent Trigger = new System.Threading.ManualResetEvent(false);
+
+    private async Task Start()
+    {
+        CounterState.Value = 0;
+        IsWorking = true;
+        StateHasChanged();
+
+        await Task.Delay(500);
+        Trigger.Set();
+
+        await Task.Delay(1000);
+        IsWorking = false;
+        Trigger.Reset();
+    }
+
+}
